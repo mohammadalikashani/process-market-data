@@ -1,0 +1,45 @@
+version: '3'
+services:
+
+  rest_serve_1:
+    image: process_market_data_rest:latest
+    container_name: rest_serve_1
+    env_file:
+      - 'variables.env'
+    command: python -m manage
+    networks:
+      - rest_serve_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    restart: always
+    ulimits:
+      nofile:
+        soft: 10240
+        hard: 20480
+
+  rest_serve_router:
+    image: envoy:v1.23-latest
+    container_name: rest_serve_router
+    networks:
+      - rest_serve_network
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "9100:9100"
+    ulimits:
+      nofile:
+        soft: 10240
+        hard: 20480
+
+networks:
+  rest_serve_network:
+    external: true
